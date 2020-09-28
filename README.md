@@ -1,9 +1,8 @@
-Multipart Form Data for Rocket Framework
-====================
+# Multipart Form Data for Rocket Framework
 
 [![Build Status](https://travis-ci.org/magiclen/rocket-multipart-form-data.svg?branch=master)](https://travis-ci.org/magiclen/rocket-multipart-form-data)
 
-This crate provides a multipart parser for the Rocket framework.
+This crate provides a multipart parser for the Rocket framework for version 0.5.0-dev (async).
 
 ## Example
 
@@ -19,7 +18,7 @@ use rocket::http::ContentType;
 use rocket_multipart_form_data::{mime, MultipartFormDataOptions, MultipartFormData, MultipartFormDataField, Repetition};
 
 #[post("/", data = "<data>")]
-fn index(content_type: &ContentType, data: Data) -> &'static str
+async fn index(content_type: &ContentType, data: Data) -> &'static str
 {
     let mut options = MultipartFormDataOptions::with_multipart_form_data_fields(
         vec! [
@@ -31,7 +30,9 @@ fn index(content_type: &ContentType, data: Data) -> &'static str
         ]
     );
 
-    let mut multipart_form_data = MultipartFormData::parse(content_type, data, options).unwrap();
+    let mut multipart_form_data_result = MultipartFormData::parse(content_type, data, options)await;
+
+    let mut multipart_form_data = multipart_form_data_result.ok().unwrap();
 
     let photo = multipart_form_data.files.get("photo"); // Use the get method to preserve file fields from moving out of the MultipartFormData instance in order to delete them automatically when the MultipartFormData instance is being dropped
     let fingerprint = multipart_form_data.raw.remove("fingerprint"); // Use the remove method to move raw fields out of the MultipartFormData instance (recommended)

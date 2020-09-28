@@ -16,7 +16,7 @@ use crate::{
 
 use crate::mime::{self, Mime};
 
-use rocket::http::ContentType;
+use rocket::{data::ByteUnit, http::ContentType};
 use rocket::Data;
 
 use multipart::server::Multipart;
@@ -31,10 +31,10 @@ pub struct MultipartFormData {
 
 impl MultipartFormData {
     /// Parse multipart/form-data from the HTTP body.
-    pub fn parse(
+    pub async fn parse<'m>(
         content_type: &ContentType,
         data: Data,
-        mut options: MultipartFormDataOptions,
+        mut options: MultipartFormDataOptions<'m>,
     ) -> Result<MultipartFormData, MultipartFormDataError> {
         if !content_type.is_form_data() {
             return Err(MultipartFormDataError::NotFormDataError);
@@ -46,8 +46,17 @@ impl MultipartFormData {
         };
 
         options.allowed_fields.sort_by_key(|e| e.field_name);
+        let one_gib: ByteUnit = "10GiB".parse().unwrap(); // TODO: pass size limit of the request as param or handle it differently
+        let data_stream = data.open(one_gib);
 
-        let mut multipart = Multipart::with_body(data.open(), boundary);
+         let temp_request_file_path = Path::join(&options.temporary_dir, format!("req-{}", SystemTime::now()
+                                    .duration_since(SystemTime::UNIX_EPOCH)
+                                    .unwrap()
+                                    .as_nanos()));
+
+        let _ =  data_stream.stream_to_file(temp_request_file_path.clone()).await?;
+
+        let mut multipart = Multipart::with_body(File::open(temp_request_file_path.clone())?, boundary);
 
         let mut files: HashMap<Arc<str>, Vec<FileField>> = HashMap::new();
         let mut raw: HashMap<Arc<str>, Vec<RawField>> = HashMap::new();
@@ -303,6 +312,8 @@ impl MultipartFormData {
                 }
             }
         }
+
+        try_delete(temp_request_file_path);
 
         if let Some(err) = output_err {
             for (_, fields) in files {

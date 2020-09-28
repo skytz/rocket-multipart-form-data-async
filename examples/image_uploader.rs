@@ -23,12 +23,12 @@ use rocket_multipart_form_data::{
 use rocket_raw_response::RawResponse;
 
 #[get("/")]
-fn index() -> StaticResponse {
+async fn index() -> StaticResponse {
     static_response!("html-image-uploader")
 }
 
 #[post("/upload", data = "<data>")]
-fn upload(content_type: &ContentType, data: Data) -> Result<RawResponse, &'static str> {
+async fn upload(content_type: &ContentType, data: Data) -> Result<RawResponse, &'static str> {
     let options = MultipartFormDataOptions::with_multipart_form_data_fields(vec![
         MultipartFormDataField::raw("image")
             .size_limit(32 * 1024 * 1024)
@@ -36,7 +36,9 @@ fn upload(content_type: &ContentType, data: Data) -> Result<RawResponse, &'stati
             .unwrap(),
     ]);
 
-    let mut multipart_form_data = match MultipartFormData::parse(content_type, data, options) {
+    let parse_result = MultipartFormData::parse(content_type, data, options).await;
+
+    let mut multipart_form_data = match  parse_result {
         Ok(multipart_form_data) => multipart_form_data,
         Err(err) => {
             match err {
@@ -66,17 +68,17 @@ fn upload(content_type: &ContentType, data: Data) -> Result<RawResponse, &'stati
         None => Err("Please input a file."),
     }
 }
-
-fn main() {
-    rocket::ignite()
-        .attach(StaticResponse::fairing(|resources| {
-            static_resources_initialize!(
-                resources,
-                "html-image-uploader",
-                "examples/front-end/html/image-uploader.html",
-            );
-        }))
+#[rocket::main]
+async fn main() {
+    let res = rocket::ignite()
+        // .attach(StaticResponse::fairing(|resources| {
+        //     static_resources_initialize!(
+        //         resources,
+        //         "html-image-uploader",
+        //         "examples/front-end/html/image-uploader.html",
+        //     );
+        // }))
         .mount("/", routes![index])
         .mount("/", routes![upload])
-        .launch();
+        .launch().await;
 }
