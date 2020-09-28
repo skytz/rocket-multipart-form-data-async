@@ -10,12 +10,12 @@ This crate provides a multipart parser for the Rocket framework for version 0.5.
 #![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use] extern crate rocket;
-extern crate rocket_multipart_form_data;
+extern crate rocket_multipart_form_data_async;
 
 use rocket::Data;
 use rocket::http::ContentType;
 
-use rocket_multipart_form_data::{mime, MultipartFormDataOptions, MultipartFormData, MultipartFormDataField, Repetition};
+use rocket_multipart_form_data_async::{mime, MultipartFormDataOptions, MultipartFormData, MultipartFormDataField, Repetition};
 
 #[post("/", data = "<data>")]
 async fn index(content_type: &ContentType, data: Data) -> &'static str

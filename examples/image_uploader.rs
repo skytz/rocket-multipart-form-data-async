@@ -8,15 +8,15 @@ extern crate rocket_raw_response;
 #[macro_use]
 extern crate rocket;
 
-extern crate rocket_multipart_form_data;
+extern crate rocket_multipart_form_data_async;
 
 use rocket::http::ContentType;
 use rocket::Data;
 
 use rocket_include_static_resources::StaticResponse;
 
-use rocket_multipart_form_data::mime;
-use rocket_multipart_form_data::{
+use rocket_multipart_form_data_async::mime;
+use rocket_multipart_form_data_async::{
     MultipartFormData, MultipartFormDataError, MultipartFormDataField, MultipartFormDataOptions,
 };
 
@@ -38,7 +38,7 @@ async fn upload(content_type: &ContentType, data: Data) -> Result<RawResponse, &
 
     let parse_result = MultipartFormData::parse(content_type, data, options).await;
 
-    let mut multipart_form_data = match  parse_result {
+    let mut multipart_form_data = match parse_result {
         Ok(multipart_form_data) => multipart_form_data,
         Err(err) => {
             match err {
