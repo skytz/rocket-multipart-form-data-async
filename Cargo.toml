@@ -1,5 +1,5 @@
 [package]
-name = "rocket-multipart-form-data"
+name = "rocket-multipart-form-data-async"
 version = "0.9.5-async"
 edition = "2018"
 authors = ["Magic Len <len@magiclen.org>"]

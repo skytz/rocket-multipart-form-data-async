@@ -30,7 +30,7 @@ async fn index(content_type: &ContentType, data: Data) -> &'static str
         ]
     );
 
-    let mut multipart_form_data_result = MultipartFormData::parse(content_type, data, options)await;
+    let mut multipart_form_data_result = MultipartFormData::parse(content_type, data, options).await;
 
     let mut multipart_form_data = multipart_form_data_result.ok().unwrap();
 
